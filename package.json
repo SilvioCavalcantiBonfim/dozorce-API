@@ -1,0 +1,28 @@
+{
+  "name": "dozorce@api",
+  "version": "0.1.0",
+  "description": "",
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "node ./init/index.js && nodemon ./src/index.js"
+  },
+  "author": {
+    "name": "Silvio Cavalcanti Bonfim",
+    "email": "silviocavalcanti2011@gmail.com",
+    "url": "http://github.com/SilvioCavalcantiBonfim"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 17.0.0",
+    "npm": ">= 8.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "crypto-js": "^4.1.1",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "firebase": "^9.12.1",
+    "pkginfo": "^0.4.1"
+  }
+}
