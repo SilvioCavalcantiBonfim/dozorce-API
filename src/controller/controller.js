@@ -16,12 +16,69 @@ Firebase.initializeApp(firebaseConfig);
 
 const db = Firebase.database();
 
-exports.presence = async (req, res, next) => {
-    
+exports.guild = async (req, res, next) => {
+    await fetch('https://discord.com/api/users/@me/guilds', {
+        headers: {
+            'Authorization': req.headers.token_type + ' ' + CryptoJS.AES.decrypt(req.headers.access_token, process.env.AES_SECRET_KEY).toString(CryptoJS.enc.Utf8)
+        }
+    }).then(async r => {
+        const guilds_list_aux = await r.json();
+
+        if ('code' in guilds_list_aux) {
+            res.status(200).send({ code: 1004, description: 'Invalid token in request.' });
+            return
+        }
+
+        if(guilds_list_aux.filter(e => e.id === req.params.id).length === 0){
+            res.status(200).send({ code: 1005, description: 'Invalid Access.' });
+            return
+        }
+
+
+        const data = {
+            id: guilds_list_aux.filter(e => e.id === req.params.id)[0].id,
+            name: guilds_list_aux.filter(e => e.id === req.params.id)[0].name,
+            icon: (guilds_list_aux.filter(e => e.id === req.params.id)[0].icon === null) ? 'https://cdn.discordapp.com/embed/avatars/0.png' : 'https://cdn.discordapp.com/icons/' + guilds_list_aux.filter(e => e.id === req.params.id)[0].id + '/' + guilds_list_aux.filter(e => e.id === req.params.id)[0].icon
+        }
+        res.status(200).send(data)
+    }).catch(e => {
+        res.status(200).send({ code: 1002, description: 'API does not communicate Discord Server.' })
+    });
 }
 
-exports.presence_global = async (req, res, next) => {
-    
+exports.guild_verification = async (req, res, next) => {
+    await fetch('https://discord.com/api/users/@me/guilds', {
+        headers: {
+            'Authorization': req.headers.token_type + ' ' + CryptoJS.AES.decrypt(req.headers.access_token, process.env.AES_SECRET_KEY).toString(CryptoJS.enc.Utf8)
+        }
+    }).then(async r => {
+        const guilds_list_aux = await r.json();
+
+        if ('code' in guilds_list_aux) {
+            res.status(200).send({ code: 1004, description: 'Invalid token in request.' });
+            return
+        }
+
+        if(guilds_list_aux.filter(e => e.id === req.params.id).length === 0){
+            res.status(200).send({ code: 1005, description: 'Invalid Access.' });
+            return
+        }
+
+
+        const data = {
+            id: guilds_list_aux.filter(e => e.id === req.params.id)[0].id,
+            name: guilds_list_aux.filter(e => e.id === req.params.id)[0].name,
+            icon: (guilds_list_aux.filter(e => e.id === req.params.id)[0].icon === null) ? 'https://cdn.discordapp.com/embed/avatars/0.png' : 'https://cdn.discordapp.com/icons/' + guilds_list_aux.filter(e => e.id === req.params.id)[0].id + '/' + guilds_list_aux.filter(e => e.id === req.params.id)[0].icon
+        }
+        
+        db.ref('/').child(req.params.id).once("value").then(snapshot => {
+            res.status(200).send({...data, register: snapshot.val()});
+        }).catch(e => {
+            res.status(200).send({ code: 1003, description: 'API does not communicate Firebase.' })
+        })
+    }).catch(e => {
+        res.status(200).send({ code: 1002, description: 'API does not communicate Discord Server.' })
+    });
 }
 
 
@@ -33,17 +90,11 @@ exports.guilds = async (req, res, next) => {
     }).then(async r => {
         const guilds_list_aux = await r.json();
 
-        if('code' in guilds_list_aux){
+        if ('code' in guilds_list_aux) {
             res.status(200).send({ code: 1004, description: 'Invalid token in request.' });
             return
         }
-
-        db.ref().once("value").then(async snapshot => {
-            const guilds_owner = guilds_list_aux.filter(e => { return e.owner && Object.keys(snapshot.val()).indexOf(e.id) !== -1});
-            res.status(200).send(guilds_owner.map(e => {return {id: e.id, name: e.name, icon: (e.icon === null)? 'https://cdn.discordapp.com/embed/avatars/0.png': e.icon}}));
-        }).catch(e => {
-            res.status(200).send({ code: 1003, description: 'API does not communicate Firebase.' })
-        });
+        res.status(200).send(guilds_list_aux.filter(e => e.owner).map(e => e.id));
     }).catch(e => {
         res.status(200).send({ code: 1002, description: 'API does not communicate Discord Server.' })
     });
@@ -58,7 +109,7 @@ exports.profile = async (req, res, next) => {
     }).then(async r => {
         const data = await r.json();
 
-        if('code' in data){
+        if ('code' in data) {
             res.status(200).send({ code: 1004, description: 'Invalid token in request.' });
             return
         }
